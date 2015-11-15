@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+convert.R
+notebook/notebook_cache
+keep.R

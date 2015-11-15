@@ -1,0 +1,102 @@
+---
+title: "Notebook"
+author: "Your name"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    css: custom.css
+    fig_caption: true
+    fig_width: 10
+    fig_height: 7.5
+    number_sections: true
+    theme: cosmo
+    toc: true
+---
+
+--- 
+
+# Setup
+
+```{r, 'setup', message=FALSE}
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(graphZoo)
+library(png)
+library(RColorBrewer)
+
+cbf <- brewer.pal(8, "Dark2")
+```
+
+[Back to top]("#")
+
+---
+
+# Load 2014 data
+
+```{r, 'load', cache=TRUE}
+files <- list.files("../data", "2014", full.names = TRUE)
+
+dat <- lapply(files, function(file) {
+  read_rds(file)
+}) %>% bind_rows() %>%
+  mutate(month = month(starttime, label = TRUE, abbr = FALSE),
+         day = wday(starttime, label = TRUE, abbr = FALSE),
+         yday = yday(starttime),
+         hour = hour(starttime))
+```
+
+[Back to top]("#")
+
+---
+
+# Hourly usage by day
+
+```{r, 'hourly_usage', dpi=300}
+tmp <- group_by(dat, yday, hour) %>%
+  summarize(day = day[1],
+            n = n()) %>%
+  group_by(day, hour) %>%
+  summarize(mean = mean(n),
+            sd = sd(n)) %>%
+  ungroup() %>%
+  mutate(day = ordered(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", 
+                                       "Friday", "Saturday", "Sunday")))
+
+g <- ggplot(tmp, aes(x = hour, y = mean)) +
+  geom_ribbon(aes(ymin = mean - sd, ymax = mean + sd, fill = day), 
+              alpha = 0.25) +
+  geom_path(aes(color = day), size = 1) + 
+  scale_x_continuous(breaks = c(0, 6, 12, 18, 24),
+                     labels = c("12am", "6am", "12pm", "6pm", "12am")) + 
+  xlab(NULL) + ylab(NULL) + 
+  guides(color = FALSE, fill = FALSE) +
+  theme_graphzoo(base_size = 16) +
+  theme(panel.margin.x = unit(-0.6, "lines"),
+        panel.margin.y = unit(1.5, "lines")) + 
+  facet_wrap(~day, nrow = 2)
+
+img <- readPNG("../img/citibike.png")
+img <- rasterGrob(img, interpolate = TRUE)
+gBike <- gz_background() +
+  annotation_custom(img, xmin = 0.79, xmax = 0.99, ymax = 0, ymin = -0.76) + 
+  theme(panel.background = element_rect(fill = rgb(0, 0, 0, 0)))
+
+gTitle <- gz_title("2014 NYC Citibike hourly usage", size = 8)
+gSubtitle <- gz_title("Mean number of bike undocking per hour (\u00b1 sd)", 
+                      y = 0.925, size = 6, fontface = "italic")
+gBanner <- gz_banner(l.txt = "GRAPHZOO.TUMBLR.COM", 
+                     r.txt = "DATA: CITIBIKENYC.COM")
+
+gz_combine(g, gBike, gTitle, gSubtitle, gBanner,
+             top = c(0.9, 1, 1, 1, 1), 
+             bottom = c(0.025, 0, 0, 0, 0))
+```
+
+
+
+
+
+
+

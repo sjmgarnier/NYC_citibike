@@ -101,7 +101,7 @@ gz_combine(g, gBike, gTitle, gSubtitle, gBanner,
 
 # Temperature and bike usage
 
-```{r, 'temperature', cache=TRUE, dpi=300}
+```{r, 'temperature', cache=TRUE, dpi=300, warning=FALSE, message=FALSE}
 temp <- getWeatherForDate("KNYC", start_date = "2014-01-01", end_date = "2014-12-31") %>%
   mutate(yday = yday(Date))
 
@@ -114,7 +114,7 @@ g <- ggplot(tmp, aes(x = Max_TemperatureF, y = n)) +
   geom_smooth(size = 2, se = FALSE, color = cbf[2], alpha = 0.5) + 
   geom_point(size = 4, color = "#666666", alpha = 0.5) + 
   annotation_custom(img, xmin = 75, ymax = 9000, ymin = 0) + 
-  xlab("Temperature (°F)") + ylab("Number of bike trips") +
+  xlab("Daily maximum temperature (°F)") + ylab("Daily number of bike trips \n") +
   theme_graphzoo(base_size = 16)
 
 gTitle <- gz_title("Temperature & Bike Usage ", size = 8)
